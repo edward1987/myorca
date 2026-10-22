@@ -1,3 +1,21 @@
+# MyOrca
+
+> **MyOrca** is a customized, maintained fork of the open-source [Orca](https://github.com/stablyai/orca) desktop application by [stablyai](https://github.com/stablyai).
+> It incorporates custom features, personalized workflows, and Windows optimizations while maintaining continuous, reviewed synchronization with the upstream project.
+
+### Fork Architecture & Quick Links
+
+- **Upstream Repository**: [stablyai/orca](https://github.com/stablyai/orca) (Preserved MIT License & full Git history)
+- **Fork Repository**: [edward1987/myorca](https://github.com/edward1987/myorca)
+- **Default Branch (`custom`)**: Primary branch for custom features and configurations.
+- **Upstream Mirror (`upstream-sync`)**: Exact fast-forward mirror of `upstream/main`.
+- **Guides**:
+  - [Upstream Synchronization Strategy](docs/UPSTREAM_SYNC.md)
+  - [Custom Development Guide](docs/CUSTOM_DEVELOPMENT.md)
+  - [Windows Build & Environment Guide](docs/BUILD_WINDOWS.md)
+
+---
+
 <h1 align="center">
   <a href="https://onOrca.dev"><img src="resources/build/icon.png" alt="Orca" width="64" valign="middle" /></a> Orca
 </h1>

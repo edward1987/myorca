@@ -1,5 +1,6 @@
 import { app, powerMonitor } from 'electron'
 import type { BrowserWindow } from 'electron'
+import { UPDATER_CONFIG } from '../../custom/config/updater'
 import type { ReleaseBuild, ReleaseChannel } from '../../shared/release-channel'
 import type { ReleaseBuildListOptions } from '../updater-release-build-cache'
 import type {
@@ -160,7 +161,7 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     if (this.activeUpdateSource === 'release') {
       autoUpdater.setFeedURL({
         provider: 'generic',
-        url: 'https://github.com/stablyai/orca/releases/latest/download'
+        url: UPDATER_CONFIG.updateFeedUrl
       })
     }
     if (this.autoUpdaterInitialized) {

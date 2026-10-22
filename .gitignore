@@ -123,6 +123,10 @@ docs/**
 !docs/reference/cross-platform-support.md
 !docs/reference/git-workflow.md
 !docs/reference/test-antipatterns.md
+# MyOrca Fork Documentation
+!docs/UPSTREAM_SYNC.md
+!docs/CUSTOM_DEVELOPMENT.md
+!docs/BUILD_WINDOWS.md
 !docs/audits/
 !docs/audits/crashpad-read-limit/
 !docs/audits/crashpad-read-limit/source-hashes.json

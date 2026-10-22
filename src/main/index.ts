@@ -1,4 +1,5 @@
 import { app, clipboard, dialog, type BrowserWindow } from 'electron'
+import { initializeCustomMain } from '../custom/main'
 import { parseSkillShareId } from '../shared/skill-share-link'
 import { createMacAppActivationHandler } from './window/macos-app-activation'
 import { isBackgroundLaunch, isOrcadSidecarLaunch } from './window/foreground-activation-policy'
@@ -108,6 +109,10 @@ const preflightReady = runMainProcessPreflight({
 
 // Why: when another process holds the lock we've already exited; skip file-writing side effects so this transient process never touches userData.
 if (preflightReady) {
+  initializeCustomMain({
+    userDataPath: app.getPath('userData'),
+    isPackaged: app.isPackaged
+  })
   void leaseAppImageGenerationForCurrentProcess()
   app.on('open-url', (event, url) => {
     if (!parseSkillShareId(url)) {

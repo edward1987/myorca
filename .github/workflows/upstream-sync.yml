@@ -1,0 +1,135 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    # Run daily at 04:00 UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      force_pr_check:
+        description: 'Force checking and opening PR even if upstream-sync had no new commits'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-upstream:
+    name: Sync Upstream & Prepare PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: upstream-sync
+
+      - name: Configure Git Identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add and Fetch Upstream
+        run: |
+          git remote add upstream https://github.com/stablyai/orca.git || git remote set-url upstream https://github.com/stablyai/orca.git
+          git fetch upstream main
+          git fetch origin custom
+
+      - name: Fast-Forward upstream-sync
+        id: ff_sync
+        run: |
+          LOCAL_SYNC_SHA=$(git rev-parse HEAD)
+          UPSTREAM_MAIN_SHA=$(git rev-parse upstream/main)
+
+          echo "Current upstream-sync: $LOCAL_SYNC_SHA"
+          echo "Latest upstream/main:  $UPSTREAM_MAIN_SHA"
+
+          if [ "$LOCAL_SYNC_SHA" = "$UPSTREAM_MAIN_SHA" ]; then
+            echo "upstream-sync is already identical to upstream/main."
+            echo "has_new_upstream_commits=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Fast-forwarding upstream-sync to upstream/main..."
+            git merge --ff-only upstream/main
+            git push origin upstream-sync
+            echo "has_new_upstream_commits=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Evaluate Custom Branch Status
+        id: eval_custom
+        env:
+          FORCE_CHECK: ${{ github.event.inputs.force_pr_check }}
+        run: |
+          NEW_COMMITS_COUNT=$(git rev-list --count origin/custom..upstream-sync)
+          echo "Commits in upstream-sync not in custom: $NEW_COMMITS_COUNT"
+          echo "commits_behind=$NEW_COMMITS_COUNT" >> "$GITHUB_OUTPUT"
+
+          if [ "$NEW_COMMITS_COUNT" -gt 0 ] || [ "$FORCE_CHECK" = "true" ]; then
+            echo "needs_pr=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_pr=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check Merge Conflict Status
+        id: check_conflicts
+        if: steps.eval_custom.outputs.needs_pr == 'true'
+        run: |
+          MERGE_BASE=$(git merge-base origin/custom upstream-sync)
+          echo "Merge base: $MERGE_BASE"
+
+          # Perform in-memory tree merge test
+          if git merge-tree --write-tree origin/custom upstream-sync > /dev/null 2>&1; then
+            echo "Clean merge: no conflicts detected."
+            echo "has_conflicts=false" >> "$GITHUB_OUTPUT"
+            echo "conflict_summary=No merge conflicts detected. Automatic clean merge possible." >> "$GITHUB_OUTPUT"
+          else
+            echo "Merge conflicts detected!"
+            echo "has_conflicts=true" >> "$GITHUB_OUTPUT"
+            echo "conflict_summary=Merge conflicts detected. Manual resolution required before merging." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Manage Sync Pull Request
+        if: steps.eval_custom.outputs.needs_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMITS_BEHIND: ${{ steps.eval_custom.outputs.commits_behind }}
+          HAS_CONFLICTS: ${{ steps.check_conflicts.outputs.has_conflicts }}
+          CONFLICT_SUMMARY: ${{ steps.check_conflicts.outputs.conflict_summary }}
+        run: |
+          PR_TITLE="chore(upstream): sync $COMMITS_BEHIND new commit(s) from stablyai/orca"
+
+          PR_BODY="## Automated Upstream Synchronization
+
+          This pull request incorporates updates from the official upstream repository (\`stablyai/orca\`) into the primary development branch (\`custom\`).
+
+          ### Status
+          - **Commits pending**: $COMMITS_BEHIND
+          - **Conflict check**: $CONFLICT_SUMMARY
+
+          ### Review Instructions
+          1. Review the commits and file diff below.
+          2. Check that custom modifications in \`src/custom/\` and branding are untouched.
+          3. If conflicts exist, resolve locally:
+             \`\`\`bash
+             git checkout custom
+             git pull origin custom
+             git fetch origin upstream-sync
+             git merge origin/upstream-sync
+             # Resolve conflicts and run tests
+             git commit
+             git push origin custom
+             \`\`\`
+          4. When verified, merge this PR targeting \`custom\`.
+
+          *Note: This PR is never automatically merged into \`custom\`.*"
+
+          EXISTING_PR=$(gh pr list --head upstream-sync --base custom --state open --json number -q '.[0].number')
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Found existing open PR #$EXISTING_PR. Updating description..."
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+          else
+            echo "Creating new pull request targeting custom..."
+            gh pr create --head upstream-sync --base custom --title "$PR_TITLE" --body "$PR_BODY"
+          fi
