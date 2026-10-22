@@ -8,6 +8,8 @@ import type { TerminalWorktreeParkingDebugVerdict } from './components/terminal-
 import type { TerminalPtyPreSpawnE2EBarrier } from './components/terminal-pane/terminal-pty-pre-spawn-e2e-barrier'
 import type { LocalLayoutStreamE2EEnd } from './runtime/local-layout-stream-e2e-end'
 
+import type { MyOrcaPreloadApi } from '../../custom/preload'
+
 declare module 'monaco-editor/esm/vs/basic-languages/python/python.js' {
   export const conf: languages.LanguageConfiguration
   export const language: languages.IMonarchLanguage
@@ -130,6 +132,7 @@ declare global {
     | undefined
   // oxlint-disable-next-line typescript-eslint/consistent-type-definitions -- declaration merging requires interface
   interface Window {
+    myorca: MyOrcaPreloadApi
     __paneManagers?: Map<string, PaneManager>
     __onboardingFeatureSetupDeps?: OnboardingFeatureSetupDeps
     __terminalParkingDebug?: {

@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { ExternalLink, FolderOpen } from 'lucide-react'
+import { Columns2, ExternalLink, FolderOpen, Monitor } from 'lucide-react'
+import { useSplitProjectStore } from '../../../../custom/renderer/store/split-project-store'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -315,6 +316,34 @@ export function WorktreeOpenInSubMenu({
           workspace={workspace}
           disabled={disabled}
         />
+        {workspace?.workspaceId ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => {
+                stopMenuPropagation(e)
+                const currentActive = useAppStore.getState().activeWorktreeId
+                if (currentActive && workspace.workspaceId) {
+                  useSplitProjectStore.getState().enableSplit(currentActive, workspace.workspaceId)
+                }
+              }}
+            >
+              <Columns2 className="size-3.5 mr-2" />
+              Split View with this Project
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                stopMenuPropagation(e)
+                if (workspace.workspaceId) {
+                  void window.myorca?.openProjectWindow(workspace.workspaceId)
+                }
+              }}
+            >
+              <Monitor className="size-3.5 mr-2" />
+              Open in New Window (Monitor 2)
+            </DropdownMenuItem>
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={stopMenuPropagation}

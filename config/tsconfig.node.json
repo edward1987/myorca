@@ -28,7 +28,11 @@
     "../src/packages/process-host/src/__fixtures__/**/*",
     "../src/wsl-guest/**/*",
     "../src/types/**/*",
-    "../src/custom/**/*"
+    "../src/custom/main/**/*",
+    "../src/custom/config/**/*",
+    "../src/custom/shared/**/*",
+    "../src/custom/preload/**/*",
+    "../src/custom/index.ts"
   ],
   "compilerOptions": {
     "composite": true,

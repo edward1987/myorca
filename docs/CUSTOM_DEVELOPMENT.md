@@ -133,3 +133,56 @@ pnpm run build:desktop:assets
 ```
 
 Because 99% of your logic resides in `src/custom/`, future upstream merges will never overwrite your implementation!
+
+---
+
+## 5. Built-in Custom Feature: Multi-Project Split View & Multi-Window
+
+MyOrca includes a custom-built capability allowing users to:
+
+1. **Split the window view between multiple projects/workspaces** simultaneously (side-by-side or stacked).
+2. **Pop out any project into a dedicated window on another monitor** (multi-monitor support).
+
+### 5.1 Architecture Overview
+
+```
+src/custom/
+├── shared/
+│   └── multi-project-types.ts         # SplitProjectState, ProjectWindowInfo
+├── main/
+│   ├── project-window-manager.ts     # Multi-monitor detection, window creation & bounds management
+│   ├── project-window-manager.test.ts# Main process unit tests
+│   └── ipc-handlers.ts               # IPC endpoints (open, close, move-to-next-display)
+├── preload/
+│   └── index.ts                      # Preload bridge exposing window.myorca
+└── renderer/
+    ├── store/
+    │   ├── split-project-store.ts     # Split view state, ratio (20-80%), orientation
+    │   └── split-project-store.test.ts# Store unit tests
+    ├── components/
+    │   ├── MyOrcaWindowActions.tsx    # Titlebar controls (Split dropdown, swap, orientation, Monitor 2 button)
+    │   ├── SplitWorkspaceSurfaceManager.tsx # Dual-pane container with active focus management
+    │   └── SplitProjectDivider.tsx    # Draggable resizing splitter handle
+    └── hooks/
+        └── use-project-window-mode.ts # Auto-activates target workspace in secondary project windows
+```
+
+### 5.2 User Controls & Interactions
+
+- **Titlebar Split Button (`Columns2` icon)**:
+  - Click to open the project selector dropdown and choose another project to split with.
+- **Draggable Splitter**:
+  - Drag horizontally (or vertically) to adjust the split ratio between 20% and 80%.
+  - Double-click the splitter to reset to a balanced 50/50 ratio.
+- **Orientation Toggle (`Rows2` / `Columns2` icon)**:
+  - Toggle between side-by-side (horizontal) and stacked (vertical) layout.
+- **Swap Projects (`ArrowLeftRight` icon)**:
+  - Swaps left/right or top/bottom project positions.
+- **Click to Focus**:
+  - Clicking either pane highlights that project's header and switches active focus, routing keyboard shortcuts and tab actions to that project while keeping both projects active and visible.
+- **Pop Out to Window (Monitor 2) (`Monitor` icon)**:
+  - Opens the current project in a separate Electron BrowserWindow placed directly on the secondary monitor (if available) or cascaded on the primary display.
+- **Next Monitor Button**:
+  - In secondary project windows, a "Next Monitor" button in the titlebar cycles the window across monitors.
+- **Sidebar Context Menu**:
+  - Right-clicking any worktree in the sidebar provides "Split View with this Project" and "Open in New Window (Monitor 2)".

@@ -8,3 +8,8 @@ export function getCustomBrandName(): string {
 }
 
 export { BRAND_CONFIG }
+export * from './store/split-project-store'
+export * from './components/MyOrcaWindowActions'
+export * from './components/SplitWorkspaceSurfaceManager'
+export * from './components/SplitProjectDivider'
+export * from './hooks/use-project-window-mode'

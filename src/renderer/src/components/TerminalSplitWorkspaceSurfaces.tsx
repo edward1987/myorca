@@ -1,6 +1,7 @@
 import { useAnyBrowserGuestNeedsPaint } from './browser-pane/host-guest/browser-guest-paint-retention'
 import { WorktreeSplitSurface } from './TerminalWorktreeSplitSurface'
 import { selectParkedEquivalentMountTabIds } from './terminal/startup-terminal-tab-hold'
+import { SplitWorkspaceSurfaceManager } from '../../../custom/renderer/components/SplitWorkspaceSurfaceManager'
 import type { TerminalController } from './use-terminal-controller'
 
 export function TerminalSplitWorkspaceSurfaces({
@@ -11,7 +12,6 @@ export function TerminalSplitWorkspaceSurfaces({
   const {
     activationDeferredMountTabIdsByWorktreeRef,
     activeGroupIdByWorktree,
-    activeView,
     activityTerminalPortals,
     anyMountedWorktreeHasLayout,
     backgroundMountTabIdsByWorktreeRef,
@@ -20,8 +20,6 @@ export function TerminalSplitWorkspaceSurfaces({
     forceParkedTerminalWorktreeIds,
     getEffectiveLayoutForWorktree,
     measurableBackgroundWorktreeIdsRef,
-    mountedWorktreeIdsRef,
-    renderedActiveWorktreeId,
     startupTerminalTabHold,
     workspaceSurfaces
   } = controller
@@ -42,14 +40,17 @@ export function TerminalSplitWorkspaceSurfaces({
             : ' hidden'
       }`}
     >
-      {workspaceSurfaces
-        .filter((workspace) => mountedWorktreeIdsRef.current.has(workspace.id))
-        .map((workspace) => {
+      <SplitWorkspaceSurfaceManager
+        controller={controller}
+        renderSurface={(workspaceId, isVisible) => {
+          const workspace = workspaceSurfaces.find((ws) => ws.id === workspaceId)
+          if (!workspace) {
+            return null
+          }
           const layout = getEffectiveLayoutForWorktree(workspace.id)
           if (!layout) {
             return null
           }
-          const isVisible = activeView === 'terminal' && workspace.id === renderedActiveWorktreeId
           const shouldMeasureHiddenWorktree =
             !isVisible && measurableBackgroundWorktreeIdsRef.current.has(workspace.id)
           const shouldColdParkTerminalPanes =
@@ -78,7 +79,8 @@ export function TerminalSplitWorkspaceSurfaces({
               )}
             />
           )
-        })}
+        }}
+      />
     </div>
   )
 }

@@ -36,6 +36,7 @@ import { useRuntimeGraphSync } from './app-shell/use-runtime-graph-sync'
 import { useWindowVisibilityEffects } from './app-shell/use-window-visibility-effects'
 import { SpaceWindowStatePublisher } from './components/workspace-space/SpaceWindowStatePublisher'
 import { PlainSshTerminalPanels } from './components/plain-ssh-terminal/PlainSshTerminalPanels'
+import { useProjectWindowMode } from '../../custom/renderer/hooks/use-project-window-mode'
 import { installActiveWorktreeRemovalSuccessor } from './lib/active-worktree-removal-successor'
 
 function App(): React.JSX.Element {
@@ -45,6 +46,7 @@ function App(): React.JSX.Element {
   const clearUnreadDockBadge = useUnreadDockBadge(floatingWorkspace.open)
 
   useAppShellServices()
+  useProjectWindowMode()
   // Why before the startup chain: its effect runs first, and no startup step can skip the load.
   useEffect(startNativeChatDraftLoad, [])
   useAppStartupHydration(onboardingGate.applyStartupOnboardingState)

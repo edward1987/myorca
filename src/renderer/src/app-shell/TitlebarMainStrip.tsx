@@ -2,6 +2,7 @@ import { Minimize2, PanelRight } from 'lucide-react'
 import { translate } from '@/i18n/i18n'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { TOGGLE_TERMINAL_PANE_EXPAND_EVENT } from '@/constants/terminal'
+import { MyOrcaWindowActions } from '../../../custom/renderer/components/MyOrcaWindowActions'
 import { ActivityTitlebarControls } from '../components/activity/ActivityTitlebarControls'
 import { useShortcutLabel } from '../hooks/useShortcutLabel'
 import { useAppStore } from '../store'
@@ -71,6 +72,7 @@ export function TitlebarMainStrip({ layout }: { layout: AppChromeLayout }): Reac
           </TooltipContent>
         </Tooltip>
       )}
+      <MyOrcaWindowActions />
       {/* Why: the open right sidebar's header renders its own close button, so hide this duplicate. */}
       {layout.showRightSidebarControls && !layout.rightSidebarOpen ? <RightSidebarToggle /> : null}
       {/* Why: reserve space so the Windows/Linux window-controls overlay doesn't obscure content. */}

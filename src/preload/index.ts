@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import { myorcaPreloadApi } from '../custom/preload'
 import type { PreloadApi } from './api-types'
 import { installBrowserFindListener } from './preload-runtime-support'
 import { appApi } from './api/app-bridge'
@@ -192,9 +193,12 @@ const api = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('myorca', myorcaPreloadApi)
   } catch (error) {
     console.error(error)
   }
 } else {
   window.api = api
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: fallback when context isolation is disabled
+  ;(window as unknown as { myorca: typeof myorcaPreloadApi }).myorca = myorcaPreloadApi
 }
